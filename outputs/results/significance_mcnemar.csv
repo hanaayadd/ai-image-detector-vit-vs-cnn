@@ -1,0 +1,9 @@
+setup,test_set,only CNN correct,only ViT correct,p_value,significant (p < 0.05)
+trainSD14,test_sd14,120,758,5.7728381119576234e-114,True
+trainSD14,test_sd21,464,898,2.5858273598814673e-32,True
+trainSD14,test_sd30,849,1118,1.4316926060572644e-09,True
+trainSD14,test_sd21blur,7396,522,0.0,True
+trainSD21,test_sd14,924,1574,5.6001350776440214e-39,True
+trainSD21,test_sd21,58,419,1.5400245294205274e-68,True
+trainSD21,test_sd30,1571,779,5.3513859578048984e-61,True
+trainSD21,test_sd21blur,3693,873,0.0,True

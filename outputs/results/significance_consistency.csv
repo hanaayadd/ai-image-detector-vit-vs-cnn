@@ -1,0 +1,9 @@
+setup,test_set,seeds,ViT_better_in,significant_in,largest_p
+trainSD14,test_sd14,3,3,3,2.2661120013624697e-34
+trainSD14,test_sd21,3,3,3,5.057528865548226e-23
+trainSD14,test_sd30,3,1,3,1.5149211216062044e-08
+trainSD14,test_sd21blur,3,0,3,0.0
+trainSD21,test_sd14,3,2,2,0.24579499635531832
+trainSD21,test_sd21,3,3,3,1.1356708434481432e-50
+trainSD21,test_sd30,3,0,3,4.16106420161966e-44
+trainSD21,test_sd21blur,3,0,3,0.0
