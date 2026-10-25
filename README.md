@@ -86,7 +86,7 @@ Every main model was trained with three seeds; values are mean ± standard devia
 
 ![Grad-CAM for the models trained on SD 1.4](outputs/figures/03_gradcam_trainSD14_test_sd14.png)
 
-All result tables are in [`outputs/results/`](outputs/results/) and all figures in [`outputs/figures/`](outputs/figures/). The trained models and processed data are available on [Google Drive](GOOGLE_DRIVE_LINK).
+All result tables are in [`outputs/results/`](outputs/results/) and all figures in [`outputs/figures/`](outputs/figures/). The trained models and processed data are available on [Google Drive](https://drive.google.com/drive/folders/1iClMK8QN5e4zw3phZ0wAXaqeeXERRmKo?usp=sharing).
 
 ## Notebooks
 
@@ -95,7 +95,18 @@ All result tables are in [`outputs/results/`](outputs/results/) and all figures 
 | [`01_preprocessing.ipynb`](01_preprocessing.ipynb) | Downloads the four datasets, builds class-balanced splits, matches blurred fakes to their originals, removes leaked and duplicate images, and plots sample images and frequency spectra |
 | [`02_training.ipynb`](02_training.ipynb) | Fine-tunes ResNet-50 and ViT-S/16 on both training setups with three seeds, plus blur/JPEG-augmented versions (16 runs) |
 | [`03_evaluation.ipynb`](03_evaluation.ipynb) | Evaluates every model on every test set: main metrics, comparison with Jiang (2024), significance tests, robustness, Grad-CAM, score distributions, threshold recalibration and per-class results |
-| [`04_demo.ipynb`](04_demo.ipynb) | Interactive Gradio demo: guess which image is AI-generated, see how detectors cope with newer generators, try a blur attack, and run Grad-CAM on your own images |
+| [`04_demo.ipynb`](04_demo.ipynb) | Interactive Gradio demo (see below) |
+
+## Demo
+
+[`04_demo.ipynb`](04_demo.ipynb) launches an interactive Gradio app, *Forger vs Detective*, with four tabs:
+
+1. **Can you tell?** The audience guesses which images are real or AI-generated, and their score is compared with both detectors.
+2. **The forger gets better.** A live test of the detectors on fakes from newer generators they were not trained on.
+3. **Blur attack.** A slider blurs an image and shows how each detector's confidence changes.
+4. **Explain.** Upload any image to see both detectors' predictions and their Grad-CAM heat maps.
+
+The app is a research prototype: images are reduced to 32×32 pixels, so predictions on real-world photographs are unreliable and should never be used to accuse anyone of faking an image.
 
 ## Repository structure
 
@@ -111,7 +122,7 @@ All result tables are in [`outputs/results/`](outputs/results/) and all figures 
 └── README.md
 ```
 
-The datasets and trained models are not included because of their size. The datasets can be downloaded from the Kaggle links above, and the trained models and processed data from [Google Drive](GOOGLE_DRIVE_LINK).
+The datasets and trained models are not included because of their size. The datasets can be downloaded from the Kaggle links above, and the trained models and processed data from [Google Drive](https://drive.google.com/drive/folders/1iClMK8QN5e4zw3phZ0wAXaqeeXERRmKo?usp=sharing).
 
 ## Limitations
 
