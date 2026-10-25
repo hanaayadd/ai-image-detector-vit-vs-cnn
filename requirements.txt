@@ -1,0 +1,16 @@
+# Run in Google Colab (Python 3, T4 GPU). Colab already provides torch, torchvision,
+# numpy, pandas, scipy, scikit-learn, matplotlib, pillow and tqdm; the notebooks install the rest.
+torch
+torchvision
+timm
+grad-cam
+gradio
+kagglehub
+kaggle
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+pillow
+tqdm
