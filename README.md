@@ -20,8 +20,8 @@ The project extends Jiang (2024), whose robustness tests covered CNNs only, and 
 ## Key findings
 
 - **On the generator it was trained on, the ViT is the better detector:** 97.9% vs 95.2% accuracy (SD 1.4) and 99.2% vs 97.5% (SD 2.1), with two to four times fewer real photos wrongly flagged as fake.
-- **On unseen generators, the ViT's accuracy is no better than the CNN's**, but it still separates real from fake better (higher AUROC on all four unseen-generator tests). Its scores shift, so the default 0.5 cut-off lands in the wrong place.
-- **Re-setting the cut-off with only 200 labelled images** makes the ViT the best detector on every unseen generator, for example 86.2% vs 82.1% on SD 3.0 after training on SD 2.1 (up from 71.3%).
+- **On unseen generators, the ViT's accuracy is no better than the CNN's**, but it still separates real from fake better (higher AUROC on all four unseen Stable Diffusion tests). Its scores shift, so the default 0.5 cut-off lands in the wrong place.
+- **Re-setting the cut-off with only 200 labelled images** makes the ViT the best detector on every unseen Stable Diffusion generator, for example 86.2% vs 82.1% on SD 3.0 after training on SD 2.1 (up from 71.3%).
 - **Blurring a fake defeats the ViT:** it caught only 13% (trained on SD 1.4) and 25% (trained on SD 2.1) of blurred fakes, compared with about 80% for the CNN. This suggests the ViT learned a "sharp means fake" shortcut.
 - **Blur and JPEG augmentation fixes the blur weakness** (the augmented ViT catches up to 96% overall on the blurred set) but lowers accuracy on the newest generator, SD 3.0, by 3 to 6 points.
 - **Grad-CAM** shows the CNN focusing on the object in the centre of the image, while the ViT spreads its attention across the whole image.
