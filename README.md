@@ -12,8 +12,10 @@ Both models have a similar number of parameters (23.5M and 21.7M), start from Im
 - fakes from **newer generators** they never saw (Stable Diffusion 2.1 and 3.0)
 - **blurred fakes**, an easy way for someone to try to hide a fake
 - real and fake images that are both **blurred or JPEG-compressed**, as happens when images are re-shared online
+- fakes from **two GANs** (a conditional DCGAN trained here and NVIDIA's pretrained StyleGAN2-ADA), a generator family they never saw
+- fakes from an **adversarial forger**: the DCGAN fine-tuned to fool one specific detector
 
-The project extends Jiang (2024), whose robustness tests covered CNNs only, and uses Grad-CAM to show which parts of an image each model relies on.
+The project extends Jiang (2024), whose robustness tests covered CNNs only, and uses Grad-CAM to show which parts of an image each model relies on. It is written up as a paper for ISDIA 2027.
 
 ## Key findings
 
@@ -23,6 +25,8 @@ The project extends Jiang (2024), whose robustness tests covered CNNs only, and 
 - **Blurring a fake defeats the ViT:** it caught only 13% (trained on SD 1.4) and 25% (trained on SD 2.1) of blurred fakes, compared with about 80% for the CNN. This suggests the ViT learned a "sharp means fake" shortcut.
 - **Blur and JPEG augmentation fixes the blur weakness** (the augmented ViT catches up to 96% overall on the blurred set) but lowers accuracy on the newest generator, SD 3.0, by 3 to 6 points.
 - **Grad-CAM** shows the CNN focusing on the object in the centre of the image, while the ViT spreads its attention across the whole image.
+- **Both detectors fail completely on GAN fakes:** they catch at most 6.8% of them (accuracy 48–51%), even though StyleGAN2-ADA (FID 6.1) is far more realistic than the diffusion fakes (FID 31–41). Re-setting the cut-off does not help. The frequency spectra suggest why: the diffusion fakes carry extra high-frequency energy, which the detectors learned to flag, and the GAN fakes do not.
+- **The adversarial forger had almost nothing left to beat:** fine-tuning the DCGAN against a detector lowered that detector's catch rate from 2.2% to 0.2% (CNN) and from 0.2% to 0.1% (ViT). An ordinary GAN already evades both.
 
 Neither architecture is robust on its own: what a detector is trained on, and how its threshold is set, matter as much as its architecture.
 
@@ -34,6 +38,10 @@ Neither architecture is robust on its own: what a detector is trained on, and ho
 | [SD 2.1 CIFAKE 512-32JPG](https://www.kaggle.com/datasets/justinjiangnext/d21cifake-512pxjpg) (Jiang, 2024) | Stable Diffusion 2.1 | Training setup 2 and testing |
 | [Stable Diffusion 3.0 CIFAKE, 32x32 JPG (1024)](https://www.kaggle.com/datasets/justinjiangnext/sd30cifake-32jpg) (Jiang, 2024) | Stable Diffusion 3.0 | Testing only (unseen generator) |
 | [Gaussian Blurred SD2.1 Images](https://www.kaggle.com/datasets/justinjiangnext/gaussianblur) (Jiang, 2024) | Stable Diffusion 2.1, then blurred | Testing only |
+| DCGAN (generated in notebook 05) | Conditional DCGAN trained on CIFAR-10 train | Testing only (unseen family), clean and blurred |
+| StyleGAN2-ADA (generated in notebook 05) | [NVIDIA's pretrained CIFAR-10 model](https://github.com/NVlabs/stylegan2-ada-pytorch) (Karras et al., 2020) | Testing only (unseen family), clean and blurred |
+
+The GAN fakes are saved as JPEG with the same quality (75) and chroma subsampling (4:2:0) as the Kaggle files, so the file format gives nothing away.
 
 All images are 32×32 JPEGs of the ten CIFAR-10 classes (airplane, car, bird, cat, deer, dog, frog, horse, ship, truck). The real images are CIFAR-10 photographs (Krizhevsky, 2009), shared by both training setups so that the only difference between them is the generator behind the fakes.
 
@@ -82,6 +90,19 @@ Every main model was trained with three seeds; values are mean ± standard devia
 | SD 2.1 | ResNet-50 | 88.6 → 90.5 | 75.3 → 70.4 | 97.5 → 96.2 |
 | SD 2.1 | ViT-S/16 | 62.3 → **95.8** | 71.3 → 65.2 | 99.2 → 99.0 |
 
+**GAN fakes (accuracy %, mean of three seeds, AUROC in brackets; FID-10k: DCGAN 29.4, StyleGAN2-ADA 6.1)**
+
+| Trained on | Model | DCGAN | DCGAN blurred | StyleGAN2-ADA | StyleGAN2-ADA blurred |
+|---|---|---|---|---|---|
+| SD 1.4 | ResNet-50 | 48.4 (43.2) | 77.2 (93.4) | 50.8 (54.2) | 78.8 (93.5) |
+| SD 1.4 | ViT-S/16 | 49.1 (30.1) | 49.8 (85.8) | 50.2 (52.2) | 51.1 (87.5) |
+| SD 2.1 | ResNet-50 | 49.2 (46.2) | 72.7 (95.2) | 50.0 (51.0) | 70.9 (94.3) |
+| SD 2.1 | ViT-S/16 | 50.0 (39.6) | 50.6 (93.5) | 50.1 (49.7) | 50.8 (93.0) |
+
+On the blurred GAN sets only the fakes are blurred, so the higher scores there come from detecting blur: when real photos are blurred too, every model stays at 47–53%.
+
+![Share of fakes caught on every test set](outputs/figures/05_fake_accuracy_heatmap.png)
+
 ![Robustness to blur and JPEG compression](outputs/figures/03_robustness.png)
 
 ![Grad-CAM for the models trained on SD 1.4](outputs/figures/03_gradcam_trainSD14_test_sd14.png)
@@ -96,6 +117,7 @@ All result tables are in [`outputs/results/`](outputs/results/) and all figures 
 | [`02_training.ipynb`](02_training.ipynb) | Fine-tunes ResNet-50 and ViT-S/16 on both training setups with three seeds, plus blur/JPEG-augmented versions (16 runs) |
 | [`03_evaluation.ipynb`](03_evaluation.ipynb) | Evaluates every model on every test set: main metrics, comparison with Jiang (2024), significance tests, robustness, Grad-CAM, score distributions, threshold recalibration and per-class results |
 | [`04_demo.ipynb`](04_demo.ipynb) | Interactive Gradio demo (see below) |
+| [`05_gan.ipynb`](05_gan.ipynb) | Trains a conditional DCGAN, loads StyleGAN2-ADA, builds JPEG-matched GAN test sets, measures FID, and runs all 16 trained detectors on them (no retraining) with the notebook 03 analyses; then fine-tunes the DCGAN against a frozen detector (adversarial forger) and tests transfer to the other models |
 
 ## Demo
 
@@ -115,6 +137,7 @@ The app is a research prototype: images are reduced to 32×32 pixels, so predict
 ├── 02_training.ipynb
 ├── 03_evaluation.ipynb
 ├── 04_demo.ipynb
+├── 05_gan.ipynb
 ├── outputs/
 │   ├── results/      result tables (CSV)
 │   └── figures/      figures (PNG)
@@ -128,7 +151,8 @@ The datasets and trained models are not included because of their size. The data
 
 - Images are 32×32, so fine generator artefacts are lost and results may not transfer to high-resolution fakes.
 - The ViT was pretrained on more data (ImageNet-21k) than the ResNet (ImageNet-1k), so part of its advantage may come from pretraining.
-- Only Stable Diffusion models are tested; GANs and face deepfakes are not.
+- The detectors are trained only on Stable Diffusion fakes. The GAN tests use one GAN trained here and one public checkpoint, both at CIFAR-10 resolution, and face deepfakes are not tested.
+- The adversarial forger is a white-box attack on one seed of each model.
 - The real photos date from around 2009 while the fakes are recent, and there are no faces or people in the data.
 
 ## References
@@ -141,12 +165,15 @@ The datasets and trained models are not included because of their size. The data
 - Grommelt, P., Weiss, L., Pfreundt, F.-J., & Keuper, J. (2024). *Fake or JPEG? Revealing common biases in generated image detection datasets* [Preprint]. https://arxiv.org/abs/2403.17608
 - Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On calibration of modern neural networks. In *ICML*. https://arxiv.org/abs/1706.04599
 - He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep residual learning for image recognition. In *CVPR*. https://arxiv.org/abs/1512.03385
+- Heusel, M., Ramsauer, H., Unterthiner, T., Nessler, B., & Hochreiter, S. (2017). GANs trained by a two time-scale update rule converge to a local Nash equilibrium. In *NeurIPS*. https://arxiv.org/abs/1706.08500
 - Jiang, J. (2024). *Addressing vulnerabilities in AI-image detection: Challenges and proposed solutions* [Preprint]. https://arxiv.org/abs/2412.00073
+- Karras, T., Aittala, M., Hellsten, J., Laine, S., Lehtinen, J., & Aila, T. (2020). Training generative adversarial networks with limited data. In *NeurIPS*. https://arxiv.org/abs/2006.06676
 - Krizhevsky, A. (2009). *Learning multiple layers of features from tiny images* [Technical report]. University of Toronto. https://www.cs.toronto.edu/~kriz/cifar.html
 - Naseer, M., et al. (2021). Intriguing properties of vision transformers. In *NeurIPS*. https://arxiv.org/abs/2105.10497
 - Nightingale, S. J., & Farid, H. (2022). AI-synthesized faces are indistinguishable from real faces and more trustworthy. *PNAS, 119*(8), e2120481119. https://doi.org/10.1073/pnas.2120481119
 - Ojha, U., Li, Y., & Lee, Y. J. (2023). Towards universal fake image detectors that generalize across generative models. In *CVPR*. https://arxiv.org/abs/2302.10174
 - Paul, S., & Chen, P.-Y. (2022). Vision transformers are robust learners. In *AAAI*. https://arxiv.org/abs/2105.07581
+- Radford, A., Metz, L., & Chintala, S. (2016). Unsupervised representation learning with deep convolutional generative adversarial networks. In *ICLR*. https://arxiv.org/abs/1511.06434
 - Selvaraju, R. R., et al. (2017). Grad-CAM: Visual explanations from deep networks via gradient-based localization. In *ICCV*. https://arxiv.org/abs/1610.02391
 - Wang, S.-Y., Wang, O., Zhang, R., Owens, A., & Efros, A. A. (2020). CNN-generated images are surprisingly easy to spot... for now. In *CVPR*. https://arxiv.org/abs/1912.11035
 - Wightman, R. (2019). *PyTorch image models*. https://github.com/huggingface/pytorch-image-models
